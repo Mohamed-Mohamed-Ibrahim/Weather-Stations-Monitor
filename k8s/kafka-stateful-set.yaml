@@ -22,7 +22,7 @@ spec:
       containers:
       - name: kafka
         imagePullPolicy: IfNotPresent
-        image: bitnami/kafka:latest
+        image: bitnami/kafka:3.5.1-debian-11-r14
         ports:
           - containerPort: 29092
           - containerPort: 9092
