@@ -28,6 +28,8 @@
 # Useful commands
 
 1. `kubectl get all`
+2. `kubectl get <object>`
+3. `kubectl delete all --all`
 
 # Resources
 
