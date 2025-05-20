@@ -38,5 +38,6 @@
 2. Dockerfile in k8s
    1. [video](https://youtu.be/3mdCiFu52XA)
    2. [article](https://medium.com/@haider.mtech2011/introduction-to-using-dockerfiles-in-a-kubernetes-setup-for-950661b36a8b)
+   3. [stackoverflow](https://stackoverflow.com/questions/35061746/run-jar-file-in-docker-image)
 3. [kafka](https://www.geeksforgeeks.org/setup-kafka-on-kubernetes/)
 4. [Elastic Search](https://medium.com/@ismailwajdi39/deploying-elasticsearch-and-kibana-on-kubernetes-with-password-protection-fad93010563c)
