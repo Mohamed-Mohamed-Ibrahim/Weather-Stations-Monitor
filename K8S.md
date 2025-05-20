@@ -17,7 +17,11 @@
    1. Running kafka `kubectl apply -f ./k8s/kafka/`
       1. Entering kafka `kubectl exec --stdin --tty <pod> -- /bin/sh` -> all staff will be found at `/opt/bitnami/kafka/bin/`
    2. Running central_station `kubectl apply -f ./k8s/central_station/`
+      1. if for the first time => should build Dockerfile `docker build -t central_station central_station/`
+      2. then add the image name in the k8s yaml file
    3. Running weather_station `kubectl apply -f ./k8s/weather_station/`
+      1. if for the first time => should build Dockerfile `docker build -t weather_station weather_station/`
+      2. then add the image name in the k8s yaml file
    4. Running elastic_search & kibana 
 4. 
 
