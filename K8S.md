@@ -16,6 +16,7 @@
 3. Running all `kubectl apply -f ./k8s/` -> Do not this till the end as some services are fully done
    1. Running kafka `kubectl apply -f ./k8s/kafka/`
       1. Entering kafka `kubectl exec --stdin --tty <pod> -- /bin/sh` -> all staff will be found at `/opt/bitnami/kafka/bin/`
+      2. To communicate with kafka few examples are in Resources
    2. Running central_station `kubectl apply -f ./k8s/central_station/`
       1. if for the first time => should build Dockerfile `docker build -t central_station central_station/`
       2. then add the image name in the k8s yaml file
@@ -37,4 +38,5 @@
 2. Dockerfile in k8s
    1. [video](https://youtu.be/3mdCiFu52XA)
    2. [article](https://medium.com/@haider.mtech2011/introduction-to-using-dockerfiles-in-a-kubernetes-setup-for-950661b36a8b)
-3. 
+3. [kafka](https://www.geeksforgeeks.org/setup-kafka-on-kubernetes/)
+4. [Elastic Search](https://medium.com/@ismailwajdi39/deploying-elasticsearch-and-kibana-on-kubernetes-with-password-protection-fad93010563c)

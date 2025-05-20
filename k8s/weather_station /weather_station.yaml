@@ -11,6 +11,7 @@ spec:
       labels:
         app: data_processing_archiving
     spec:
+      replicas: 10
       containers:
       - name: data_processing_archiving
         image: <Image>
