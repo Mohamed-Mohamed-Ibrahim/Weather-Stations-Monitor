@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package WeatherStationsMonitoring.BaseCentralStation;
+
+message Weather {
+  int32 humidity = 1;
+  int32 temperature = 2;
+  int32 wind_speed = 3;
+}
+
+enum Status {
+  LOW = 0;
+  MEDIUM = 1;
+  HIGH = 2;
+}
+
+message WeatherStatusMessage {
+  int64 station_id = 1;
+  int64 s_no = 2;
+  Status battery_status = 3;
+  int64 status_timestamp = 4;
+  Weather weather = 5;
+}
