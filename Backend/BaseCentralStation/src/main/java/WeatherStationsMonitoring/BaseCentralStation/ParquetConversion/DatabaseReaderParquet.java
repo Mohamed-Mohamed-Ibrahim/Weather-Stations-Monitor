@@ -82,7 +82,7 @@ public class DatabaseReaderParquet {
         return allData ;
     }
 
-    private static final String OUTPUT_DIR = "Parque";
+    private static final String OUTPUT_DIR = "Parquet";
 
     public static void dumpAllToParquet() throws IOException {
         File dir = new File(DatabaseWriter.getDatabaseDirectory());
@@ -90,7 +90,7 @@ public class DatabaseReaderParquet {
         MessageType schema = getSchema();
         if (segmentFiles == null) return;
 
-        Map<Long, List<WeatherStatusInfo>> partitionedByStation = new HashMap<>();
+        List<WeatherStatusInfo> partitionedByStation = new ArrayList<>();
 
         for (File file : segmentFiles) {
             try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
@@ -117,9 +117,7 @@ public class DatabaseReaderParquet {
                             ws.getStatusTimestamp()
                     );
 
-                    partitionedByStation
-                            .computeIfAbsent(ws.getStationId(), k -> new ArrayList<>())
-                            .add(info);
+                    partitionedByStation.add(info);
                 }
             }
         }
@@ -129,28 +127,24 @@ public class DatabaseReaderParquet {
         if (!outputDir.exists()) {
             outputDir.mkdir();
         }
+        Path path = new Path(Paths.get(OUTPUT_DIR, outputDir.listFiles().length/2+".parquet").toString());
 
         // Write each station's data to a separate Parquet file
-        for (Map.Entry<Long, List<WeatherStatusInfo>> entry : partitionedByStation.entrySet()) {
-            long stationId = entry.getKey();
-            List<WeatherStatusInfo> records = entry.getValue();
+        try (ParquetWriter<Group> writer = ExampleParquetWriter.builder(path)
+                .withType(schema)
+                .withConf(new Configuration())
+                .build()) {
+            SimpleGroupFactory groupFactory = new SimpleGroupFactory(getSchema());
+            for  (WeatherStatusInfo info : partitionedByStation) {
 
-            Path path = new Path(Paths.get(OUTPUT_DIR, "station_" + stationId + ".parquet").toString());
 
-            try (ParquetWriter<Group> writer = ExampleParquetWriter.builder(path)
-                    .withType(schema)
-                    .withConf(new Configuration())
-                    .build()) {
-                SimpleGroupFactory groupFactory = new SimpleGroupFactory(getSchema());
 
-                for (WeatherStatusInfo info : records) {
-                    Group group = groupFactory.newGroup()
-                            .append("station_id", info.getStation_id())
-                            .append("s_no", info.getS_no())
-                            .append("battery_status", info.getBattery_status())
-                            .append("status_timestamp", info.getStatus_timestamp());
-                    writer.write(group);
-                }
+                Group group = groupFactory.newGroup()
+                        .append("station_id", info.getStation_id())
+                        .append("s_no", info.getS_no())
+                        .append("battery_status", info.getBattery_status())
+                        .append("status_timestamp", info.getStatus_timestamp());
+                writer.write(group);
             }
         }
     }
