@@ -6,12 +6,14 @@
 
 # Commands To Run Kafka
 
-1. Using docker without `sudo` 
+1. Using docker without `sudo`
+
    ```
    $ sudo groupadd docker
    $ sudo usermod -aG docker $USER
    $ newgrp docker
    ```
+
 2. starting minikube `minikube start --driver=docker`
 3. Running all `kubectl apply -f ./k8s/` -> Do not this till the end as some services are fully done
    1. Running kafka `kubectl apply -f ./k8s/kafka/`
@@ -23,8 +25,8 @@
    3. Running weather_station `kubectl apply -f ./k8s/weather_station/`
       1. if for the first time => should build Dockerfile `docker build -t weather_station weather_station/`
       2. then add the image name in the k8s yaml file
-   4. Running elastic_search & kibana 
-4. 
+   4. Running elastic_search & kibana
+4.
 
 # Useful commands
 
