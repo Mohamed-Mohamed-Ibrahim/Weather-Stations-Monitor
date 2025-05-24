@@ -60,6 +60,38 @@
 			<version>3.25.3</version>
 		</dependency>
 
+		<!-- Hadoop Common -->
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-common</artifactId>
+			<version>3.3.6</version>
+		</dependency>
+
+		<!-- Parquet core libraries -->
+		<dependency>
+			<groupId>org.apache.parquet</groupId>
+			<artifactId>parquet-hadoop</artifactId>
+			<version>1.13.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.parquet</groupId>
+			<artifactId>parquet-column</artifactId>
+			<version>1.13.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.parquet</groupId>
+			<artifactId>parquet-common</artifactId>
+			<version>1.13.1</version>
+		</dependency>
+
+		<!-- Hadoop MapReduce Client Core (includes FileOutputFormat) -->
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-mapreduce-client-core</artifactId>
+			<version>3.3.6</version>
+		</dependency>
 	</dependencies>
 
 	<build>
