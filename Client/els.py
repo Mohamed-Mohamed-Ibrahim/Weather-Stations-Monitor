@@ -3,10 +3,12 @@ import pandas as pd
 import os
 from glob import glob
 from elasticsearch import Elasticsearch, helpers
+from pathlib import Path
 
 # Hardcoded values
-PARQUET_DIR = "../data/Parquet"
-INDEX_NAME = "your_index_name"
+# PARQUET_DIR = "/mnt/ddia_system/data/Parquet"
+PARQUET_DIR = "data/Parquet"
+INDEX_NAME = "after_deploy"
 
 # Set up argument parser
 parser = argparse.ArgumentParser(description="Load all Parquet files in a fixed directory to a fixed Elasticsearch index.")
@@ -22,6 +24,8 @@ es = Elasticsearch(
 
 # Find all .parquet files in the directory
 parquet_files = glob(os.path.join(PARQUET_DIR, "*.parquet"))
+# PARQUET_DIR = Path(PARQUET_DIR).resolve()
+# parquet_files = list(PARQUET_DIR.glob("*.parquet"))
 
 if not parquet_files:
     print("No parquet files found.")

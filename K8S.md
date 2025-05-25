@@ -13,7 +13,10 @@
    $ newgrp docker
    ```
 2. starting minikube `minikube start --driver=docker`
-3. Running all `kubectl apply -f ./k8s/` -> Do not this till the end as some services are fully done
+3. mount host to minikube VM `minikube mount /mnt/ddia_project/data:/data` (needed for reading parquet files)
+   1. The main idea here to separate Elastic search and kibana from main cluster as they consume too much memory
+   2. if you have enough memory you can skip this step
+4. Running all `kubectl apply -f ./k8s/` -> Do not this till the end as some services are fully done
    1. Running kafka `kubectl apply -f ./k8s/kafka/`
       1. Entering kafka `kubectl exec --stdin --tty <pod> -- /bin/sh` -> all staff will be found at `/opt/bitnami/kafka/bin/`
       2. To communicate with kafka few examples are in Resources
@@ -24,11 +27,11 @@
    3. Running weather_station `kubectl apply -f ./k8s/weather_station/`
       1. if for the first time => should build Dockerfile `docker build -t weather_station weather_station/`
       2. then add the image name in the k8s yaml file
-   4. Running elastic_search & kibana ``
+   4. Running elastic_search & kibana `docker run -d -p 9200:9200 -p 5601:5601 nshou/elasticsearch-kibana`
       1. upload to Elasticsearch
          1. for the first time `docker build -t upload-el:latest Client/`
          2. otherwise `docker run -d --name base-central-station -v ./data:/app/data base-central-station:latest`
-4. 
+5. 
 
 # Useful commands
 
@@ -45,6 +48,7 @@
 - Minikube
 1. `minikube image load base-central-station:latest` -> load local image in minikube
 2. `minikube ssh` -> open Minikube VM shell
+3. `minikube mount /mnt/ddia_project/data:/data` -> mount from host (/mnt/ddia_project/data) to minikube (/data)
 
 - Docker
 1. `docker system prune -a -f` -> remove everything
