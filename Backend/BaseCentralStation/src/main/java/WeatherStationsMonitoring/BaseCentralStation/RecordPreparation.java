@@ -1,6 +1,9 @@
 package WeatherStationsMonitoring.BaseCentralStation;
 import java.nio.ByteBuffer;
 import WeatherStationsMonitoring.BaseCentralStation.Message.*  ;
+import org.springframework.stereotype.Component;
+
+@Component
 public class RecordPreparation {
     private static byte[] longToBytes(long value) {
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES); // 8 bytes
