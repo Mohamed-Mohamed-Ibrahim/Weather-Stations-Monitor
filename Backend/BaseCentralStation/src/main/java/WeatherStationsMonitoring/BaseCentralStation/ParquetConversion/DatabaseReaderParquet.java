@@ -82,7 +82,7 @@ public class DatabaseReaderParquet {
         return allData ;
     }
 
-    private static final String OUTPUT_DIR = "Parquet";
+    private static final String OUTPUT_DIR = "data/Parquet";
 
     public static void dumpAllToParquet() throws IOException {
         File dir = new File(DatabaseWriter.getDatabaseDirectory());

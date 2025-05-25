@@ -34,7 +34,7 @@ public class DatabaseWriter {
     }
 
 
-    private static final String DATABASE_DIRECTORY = "BitCask Riak Database/";
+    private static final String DATABASE_DIRECTORY = "data/BitCask Riak Database/";
     // concurrent hashmap for concurrent access to the same key
     private static final ConcurrentHashMap<Long, RecordIdentifier> keyDirectory = new ConcurrentHashMap<>() ;
     private static final long SEGMENT_SIZE = 134217728 ;        // segment size = 128 MB
