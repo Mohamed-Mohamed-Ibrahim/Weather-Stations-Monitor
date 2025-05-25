@@ -82,7 +82,7 @@ public class DatabaseReaderParquet {
         return allData ;
     }
 
-    private static final String OUTPUT_DIR = "Parquet";
+    private static final String OUTPUT_DIR = "data/Parquet";
 
     public static void dumpAllToParquet() throws IOException {
         File dir = new File(DatabaseWriter.getDatabaseDirectory());
@@ -90,64 +90,70 @@ public class DatabaseReaderParquet {
         MessageType schema = getSchema();
         if (segmentFiles == null) return;
 
-        List<WeatherStatusInfo> partitionedByStation = new ArrayList<>();
-
-        for (File file : segmentFiles) {
-            try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-                while (raf.getFilePointer() < raf.length()) {
-                    long timestamp = raf.readLong();             // 8 bytes
-                    int keySize = raf.readUnsignedShort();       // 2 bytes
-                    int valueSize = raf.readInt();               // 4 bytes
-
-                    if (keySize != 8) {
-                        raf.skipBytes(keySize + valueSize);
-                        continue;
-                    }
-
-                    long key = raf.readLong();                   // 8-byte station_id
-                    byte[] value = new byte[valueSize];
-                    raf.readFully(value);
-
-                    WeatherStatusMessage ws = WeatherStatusMessage.parseFrom(value);
-
-                    WeatherStatusInfo info = new WeatherStatusInfo(
-                            ws.getStationId(),
-                            ws.getSNo(),
-                            ws.getBatteryStatus().toString().toLowerCase(),
-                            ws.getStatusTimestamp()
-                    );
-
-                    partitionedByStation.add(info);
-                }
-            }
-        }
-
-        // Create output directory if it doesn't exist
         File outputDir = new File(OUTPUT_DIR);
         if (!outputDir.exists()) {
             outputDir.mkdir();
         }
-        Path path = new Path(Paths.get(OUTPUT_DIR, outputDir.listFiles().length/2+".parquet").toString());
 
-        // Write each station's data to a separate Parquet file
-        try (ParquetWriter<Group> writer = ExampleParquetWriter.builder(path)
-                .withType(schema)
-                .withConf(new Configuration())
-                .build()) {
-            SimpleGroupFactory groupFactory = new SimpleGroupFactory(getSchema());
-            for  (WeatherStatusInfo info : partitionedByStation) {
+        int batchSize = 10_000;
+        int batchCount = 0;
+        int recordCount = 0;
 
+        ParquetWriter<Group> writer = null;
+        SimpleGroupFactory groupFactory = new SimpleGroupFactory(schema);
 
+        try {
+            for (File file : segmentFiles) {
+                try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                    while (raf.getFilePointer() < raf.length()) {
+                        long timestamp = raf.readLong();             // 8 bytes
+                        int keySize = raf.readUnsignedShort();       // 2 bytes
+                        int valueSize = raf.readInt();               // 4 bytes
 
-                Group group = groupFactory.newGroup()
-                        .append("station_id", info.getStation_id())
-                        .append("s_no", info.getS_no())
-                        .append("battery_status", info.getBattery_status())
-                        .append("status_timestamp", info.getStatus_timestamp());
-                writer.write(group);
+                        if (keySize != 8) {
+                            raf.skipBytes(keySize + valueSize);
+                            continue;
+                        }
+
+                        long key = raf.readLong();                   // 8-byte station_id
+                        byte[] value = new byte[valueSize];
+                        raf.readFully(value);
+
+                        WeatherStatusMessage ws = WeatherStatusMessage.parseFrom(value);
+
+                        if (writer == null) {
+                            Path path = new Path(Paths.get(OUTPUT_DIR, batchCount + ".parquet").toString());
+                            writer = ExampleParquetWriter.builder(path)
+                                    .withType(schema)
+                                    .withConf(new Configuration())
+                                    .build();
+                        }
+
+                        Group group = groupFactory.newGroup()
+                                .append("station_id", ws.getStationId())
+                                .append("s_no", ws.getSNo())
+                                .append("battery_status", ws.getBatteryStatus().toString().toLowerCase())
+                                .append("status_timestamp", ws.getStatusTimestamp());
+
+                        writer.write(group);
+                        recordCount++;
+
+                        if (recordCount >= batchSize) {
+                            writer.close();
+                            writer = null;
+                            recordCount = 0;
+                            batchCount++;
+                        }
+                    }
+                }
+            }
+        } finally {
+            if (writer != null) {
+                writer.close();
             }
         }
     }
+
     private static MessageType getSchema() {
         return MessageTypeParser.parseMessageType(
                 "message WeatherStatusInfo {\n" +

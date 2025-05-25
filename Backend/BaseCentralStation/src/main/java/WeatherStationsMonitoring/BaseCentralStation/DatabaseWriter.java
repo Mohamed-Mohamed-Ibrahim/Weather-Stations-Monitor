@@ -52,7 +52,7 @@ public class DatabaseWriter {
     }
 
 
-    private static final String DATABASE_DIRECTORY = "BitCask Riak Database/";
+    private static final String DATABASE_DIRECTORY = "data/BitCask Riak Database/";
     // concurrent hashmap for concurrent access to the same key
     private static final ConcurrentHashMap<Long, RecordIdentifier> keyDirectory = new ConcurrentHashMap<>() ;
     private static final int BATCH_SIZE_FOR_PARQUET = 10000 ;

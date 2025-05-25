@@ -10,7 +10,8 @@ public class WeatherStationMock {
     public static void main(String[] args) {
         HttpClient client = HttpClient.newHttpClient();
         Random rand = new Random();
-        String endpoint = "http://localhost:8080/weatherMonitoring/BaseCentralStation";
+//        String endpoint = "http://localhost:8080/weatherMonitoring/BaseCentralStation";
+        String endpoint = "http://192.168.49.2:30080/weatherMonitoring/BaseCentralStation";
 
         final int TOTAL_MESSAGES = 10;
         final int STATIONS = 3;
