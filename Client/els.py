@@ -5,7 +5,7 @@ from glob import glob
 from elasticsearch import Elasticsearch, helpers
 
 # Hardcoded values
-PARQUET_DIR = "/data/Parquet"
+PARQUET_DIR = "../data/Parquet"
 INDEX_NAME = "your_index_name"
 
 # Set up argument parser

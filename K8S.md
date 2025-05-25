@@ -18,26 +18,16 @@
       1. Entering kafka `kubectl exec --stdin --tty <pod> -- /bin/sh` -> all staff will be found at `/opt/bitnami/kafka/bin/`
       2. To communicate with kafka few examples are in Resources
    2. Running central_station `kubectl apply -f ./k8s/central_station/`
-      1. if for the first time => should build Dockerfile `docker build -t central_station central_station/`
-      2. then add the image name in the k8s yaml file
+      1. if for the first time => should build Dockerfile `docker build -t base-central-station:latest Backend/`
+      2. then add the image name in the k8s yaml file 
+      3. or running using docker `docker run -d --name base-central-station -p 8080:8080 -v ./data:/app/data base-central-station:latest`
    3. Running weather_station `kubectl apply -f ./k8s/weather_station/`
       1. if for the first time => should build Dockerfile `docker build -t weather_station weather_station/`
       2. then add the image name in the k8s yaml file
    4. Running elastic_search & kibana 
-      ```
-         helm repo add elastic https://helm.elastic.co
-
-         helm install elasticsearch elastic/elasticsearch \
-         --namespace logging \
-         --create-namespace \
-         --set replicas=3 \
-         --set minimumMasterNodes=2
-
-         helm install kibana elastic/kibana \
-         --namespace logging \
-         --set service.type=LoadBalancer
-
-      ```
+      1. upload to Elasticsearch
+         1. for the first time `docker build -t upload-el:latest Client/`
+         2. otherwise `docker run -d --name base-central-station -v ./data:/app/data base-central-station:latest`
 4. 
 
 # Useful commands
