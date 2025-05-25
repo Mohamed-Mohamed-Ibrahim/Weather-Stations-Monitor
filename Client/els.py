@@ -1,31 +1,45 @@
 import argparse
 import pandas as pd
+import os
+from glob import glob
 from elasticsearch import Elasticsearch, helpers
 
+# Hardcoded values
+PARQUET_DIR = "/mnt/01D8D4FB872972F0/Life/collage/collage_labs/year_3/term2/DDIA/project/Weather-Stations-Monitor/Backend/BaseCentralStation/Parquet"
+INDEX_NAME = "your_index_name"
+
 # Set up argument parser
-parser = argparse.ArgumentParser(description="Load Parquet data to Elasticsearch.")
+parser = argparse.ArgumentParser(description="Load all Parquet files in a fixed directory to a fixed Elasticsearch index.")
 parser.add_argument('--password', required=True, help="Password for Elasticsearch")
 args = parser.parse_args()
 
-# Connect to Elasticsearch using the password argument
+# Connect to Elasticsearch
 es = Elasticsearch(
     "https://localhost:9200",
     http_auth=("elastic", args.password),
     verify_certs=False
 )
 
-# Read your Parquet file
-df = pd.read_parquet("/mnt/01D8D4FB872972F0/Life/collage/collage_labs/year_3/term2/DDIA/project/Weather-Stations-Monitor/Backend/BaseCentralStation/Parquet/0.parquet")
+# Find all .parquet files in the directory
+parquet_files = glob(os.path.join(PARQUET_DIR, "*.parquet"))
 
-# Convert DataFrame rows to ES bulk format
-actions = [
-    {
-        "_index": "your_index_name",
-        "_source": row.to_dict()
-    }
-    for _, row in df.iterrows()
-]
+if not parquet_files:
+    print("No parquet files found.")
+    exit(1)
 
-# Bulk load data to Elasticsearch
-helpers.bulk(es, actions)
-print("Data loaded successfully!")
+# Process each parquet file
+for parquet_file in parquet_files:
+    print(f"Processing: {parquet_file}")
+    df = pd.read_parquet(parquet_file)
+
+    actions = [
+        {
+            "_index": INDEX_NAME,
+            "_source": row.to_dict()
+        }
+        for _, row in df.iterrows()
+    ]
+
+    helpers.bulk(es, actions)
+
+print("All data loaded successfully!")
