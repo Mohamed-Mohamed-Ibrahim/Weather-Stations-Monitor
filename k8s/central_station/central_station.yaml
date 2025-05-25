@@ -12,7 +12,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: shared-storage
   hostPath:  # For development - use appropriate storage class in production
-    path: /mnt/ddia_project/data # on host machine
+    path: /data # on minikube VM
     type: DirectoryOrCreate
 
 ---
@@ -53,7 +53,7 @@ spec:
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: shared-data
-          mountPath: /data # in /var/lib/docker/overlay2/xxx
+          mountPath: /app/data # in /var/lib/docker/overlay2/xxx
         resources:
           requests:
             memory: "256Mi"

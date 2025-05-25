@@ -43,7 +43,8 @@
 8. `kubectl port-forward pod/base-central-station-6ff5d6df88-pf99w 8080:8080` -> expose <object>
 
 - Minikube
-8. `minikube image load base-central-station:latest` -> load local image in minikube
+1. `minikube image load base-central-station:latest` -> load local image in minikube
+2. `minikube ssh` -> open Minikube VM shell
 
 - Docker
 1. `docker system prune -a -f` -> remove everything
