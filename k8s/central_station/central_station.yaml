@@ -78,6 +78,7 @@ spec:
   - protocol: TCP
     port: 8080
     targetPort: 8080
-  type: ClusterIP # => accessiable only inside cluster
-  # type: NodePort  # => accessiable outside cluster
+    nodePort: 30080 # can work with ClusterIP => port outside cluster
+  # type: ClusterIP # => accessiable only inside cluster
+  type: NodePort  # => accessiable outside cluster
   
