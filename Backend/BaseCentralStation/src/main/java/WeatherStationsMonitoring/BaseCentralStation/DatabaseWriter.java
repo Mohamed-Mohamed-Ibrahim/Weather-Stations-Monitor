@@ -1,12 +1,25 @@
 package WeatherStationsMonitoring.BaseCentralStation;
+import WeatherStationsMonitoring.BaseCentralStation.ParquetConversion.WeatherStatusInfo;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.parquet.example.data.Group;
+import org.apache.parquet.example.data.simple.SimpleGroupFactory;
+import org.apache.parquet.hadoop.ParquetWriter;
+import org.apache.parquet.hadoop.example.ExampleParquetWriter;
+import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.MessageTypeParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -50,9 +63,12 @@ public class DatabaseWriter {
             this.file_id = file_id;
         }
     }
-
-
-    private static final String DATABASE_DIRECTORY = "data/BitCask Riak Database/";
+    //  Parquet
+    private static final String Parquet_DIRECTORY = "Parquet/";
+    MessageType schema = getSchema();
+    File outputDir;
+    //
+    private static final String DATABASE_DIRECTORY = "BitCask Riak Database/";
     // concurrent hashmap for concurrent access to the same key
     private static final ConcurrentHashMap<Long, RecordIdentifier> keyDirectory = new ConcurrentHashMap<>() ;
     private static final int BATCH_SIZE_FOR_PARQUET = 10000 ;
@@ -75,6 +91,10 @@ public class DatabaseWriter {
         try {
             Files.createDirectories(Path.of(DATABASE_DIRECTORY));
             activeFile = new RandomAccessFile(DATABASE_DIRECTORY+ "Segment_1.data", "rw");
+            outputDir = new File(Parquet_DIRECTORY);
+            if (!outputDir.exists()) {
+                outputDir.mkdir();
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to initialize BitCask file", e);
         }
@@ -122,6 +142,57 @@ public class DatabaseWriter {
         currentFileRecords ++ ;
 
         if(currentFileRecords == RECORDS_PER_SEGMENT){
+            //  Parquet
+            activeFile.seek(0);
+            List<WeatherStatusInfo> partitionedByStation = new ArrayList<>();
+            while (activeFile.getFilePointer() < activeFile.length()) {
+                long ts = activeFile.readLong();             // 8 bytes
+                int keySize = activeFile.readUnsignedShort();       // 2 bytes
+                int valueSize = activeFile.readInt();               // 4 bytes
+
+                if (keySize != 8) {
+                    activeFile.skipBytes(keySize + valueSize);
+                    continue;
+                }
+
+                long key = activeFile.readLong();                   // 8-byte station_id
+                byte[] value = new byte[valueSize];
+                activeFile.readFully(value);
+
+                Message.WeatherStatusMessage ws = Message.WeatherStatusMessage.parseFrom(value);
+
+                WeatherStatusInfo info = new WeatherStatusInfo(
+                        ws.getStationId(),
+                        ws.getSNo(),
+                        ws.getBatteryStatus().toString().toLowerCase(),
+                        ws.getStatusTimestamp()
+                );
+
+                partitionedByStation.add(info);
+            }
+
+            org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(Paths.get(Parquet_DIRECTORY, activeFileOrder+".parquet").toString());
+
+            // Write each station's data to a separate Parquet file
+            try (ParquetWriter<Group> writer = ExampleParquetWriter.builder(path)
+                    .withType(schema)
+                    .withConf(new Configuration())
+                    .build()) {
+                SimpleGroupFactory groupFactory = new SimpleGroupFactory(getSchema());
+                for  (WeatherStatusInfo info : partitionedByStation) {
+
+
+
+                    Group group = groupFactory.newGroup()
+                            .append("station_id", info.getStation_id())
+                            .append("s_no", info.getS_no())
+                            .append("battery_status", info.getBattery_status())
+                            .append("status_timestamp", info.getStatus_timestamp());
+                    writer.write(group);
+                }
+            }
+
+            //
             activeFile.close();
             if((activeFileOrder+1) % (COMPACTION_PERIOD+1) == 0){
                 databaseCompactor.compactFiles(activeFileOrder-COMPACTION_PERIOD,activeFileOrder);
@@ -130,5 +201,17 @@ public class DatabaseWriter {
         }
 
     }
+
+    private static MessageType getSchema() {
+        return MessageTypeParser.parseMessageType(
+                "message WeatherStatusInfo {\n" +
+                        " required int64 station_id;\n" +
+                        " required int64 s_no;\n" +
+                        " required binary battery_status (UTF8);\n" +
+                        " required int64 status_timestamp;\n" +
+                        "}"
+        );
+    }
+
 
 }
