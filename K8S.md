@@ -24,6 +24,20 @@
       1. if for the first time => should build Dockerfile `docker build -t weather_station weather_station/`
       2. then add the image name in the k8s yaml file
    4. Running elastic_search & kibana 
+      ```
+         helm repo add elastic https://helm.elastic.co
+
+         helm install elasticsearch elastic/elasticsearch \
+         --namespace logging \
+         --create-namespace \
+         --set replicas=3 \
+         --set minimumMasterNodes=2
+
+         helm install kibana elastic/kibana \
+         --namespace logging \
+         --set service.type=LoadBalancer
+
+      ```
 4. 
 
 # Useful commands
