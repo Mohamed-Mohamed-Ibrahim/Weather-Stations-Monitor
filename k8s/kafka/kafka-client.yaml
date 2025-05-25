@@ -1,0 +1,13 @@
+# kafka-client.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kafka-client
+  namespace: kafka
+spec:
+  containers:
+  - name: kafka-client
+    image: bitnami/kafka:3.7
+    command:
+      - sleep
+      - infinity
