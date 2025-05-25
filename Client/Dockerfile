@@ -8,7 +8,7 @@ WORKDIR /app
 COPY els.py /app/els.py
 
 # Make the script executable
-RUN chmod +x /app/els.py
+RUN chmod +x els.py
 
 # Create data directory
 RUN mkdir -p /data
@@ -17,7 +17,8 @@ RUN mkdir -p /data
 VOLUME ["/data"]
 
 # Install any additional Python packages if needed
-RUN pip install -r requirments.txt
+COPY requirements.txt /app/requirements.txt
+RUN pip install -r requirements.txt
 
 # Run the Python script
-CMD ["python3", "/app/els.py"]
+CMD ["python3", "els.py"]
