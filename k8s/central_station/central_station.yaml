@@ -81,4 +81,5 @@ spec:
     nodePort: 30080 # can work with ClusterIP => port outside cluster
   # type: ClusterIP # => accessiable only inside cluster
   type: NodePort  # => accessiable outside cluster
-  
+
+---
