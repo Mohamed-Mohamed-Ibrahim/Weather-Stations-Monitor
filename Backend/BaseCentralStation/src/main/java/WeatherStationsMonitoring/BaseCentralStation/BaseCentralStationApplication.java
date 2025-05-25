@@ -14,13 +14,10 @@ public class BaseCentralStationApplication {
 	@Bean
 	CommandLineRunner commandLineRunner () {
 		return args -> {
-			System.out.println(1231231);
-//			System.out.println();
-//			DatabaseReader.viewAllFromDisk().forEach(x -> {
-//						System.out.println(x.getValue());
-//			}
+			System.out.println("Program Started");
 
-//			);
+
+
 		};
 	}
 }

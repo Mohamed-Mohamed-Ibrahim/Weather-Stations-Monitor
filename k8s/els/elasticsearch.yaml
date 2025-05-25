@@ -21,7 +21,7 @@ spec:
           value: "single-node"
         - name: ES_JAVA_OPTS
           value: "-Xms512m -Xmx512m"
-        - name: ELASTIC_PASSWORD
+        - name: ELASTIC_PASSWOR
           value: "changeme"
         ports:
         - containerPort: 9200
