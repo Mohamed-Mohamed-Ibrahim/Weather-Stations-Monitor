@@ -17,7 +17,7 @@ public class StationConsumer {
     public static void main(String[] args) {
 
         Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092");
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "zzz");
@@ -94,7 +94,8 @@ public class StationConsumer {
 
     private static void postToCentralStation(String stationJson) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("http://localhost:8080/weatherMonitoring/BaseCentralStation"))
+//                .uri(new URI("http://localhost:8080/weatherMonitoring/BaseCentralStation"))
+                .uri(new URI("http://192.168.49.2:30080/weatherMonitoring/BaseCentralStation"))
                 .timeout(Duration.ofSeconds(5))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(stationJson))
