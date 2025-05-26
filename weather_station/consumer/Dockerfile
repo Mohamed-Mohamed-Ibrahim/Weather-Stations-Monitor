@@ -4,7 +4,7 @@ FROM openjdk:21-jdk-slim
 WORKDIR /app
 
 # Copy the JAR file
-COPY weather_station.jar /app/weather_station.jar
+COPY consumer.jar /app/consumer.jar
 
 # Run the JAR file
-CMD ["java", "-jar", "weather_station.jar"]
+CMD ["java", "-jar", "consumer.jar"]
