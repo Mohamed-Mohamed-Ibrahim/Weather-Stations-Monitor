@@ -66,7 +66,7 @@ spec:
         persistentVolumeClaim:
           claimName: shared-data-pvc
 ---
-# Internal-only Service for BaseCentralStation
+# Optional: Service for BaseCentralStation (if it needs to be accessed)
 apiVersion: v1
 kind: Service
 metadata:
@@ -78,7 +78,8 @@ spec:
   - protocol: TCP
     port: 8080
     targetPort: 8080
-  type: LoadBalancer
-
+    nodePort: 30080 # can work with ClusterIP => port outside cluster
+  # type: ClusterIP # => accessiable only inside cluster
+  type: NodePort  # => accessiable outside cluster
 
 ---
