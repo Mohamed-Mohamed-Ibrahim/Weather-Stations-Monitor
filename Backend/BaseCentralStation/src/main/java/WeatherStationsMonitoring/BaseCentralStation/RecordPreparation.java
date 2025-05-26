@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RecordPreparation {
-    private static byte[] longToBytes(long value) {
+    public static byte[] longToBytes(long value) {
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES); // 8 bytes
         buffer.putLong(value);
         return buffer.array();
