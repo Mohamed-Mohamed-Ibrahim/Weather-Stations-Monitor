@@ -30,7 +30,7 @@ public class BaseCentralStationController {
 
     @GetMapping("/all")
     public ResponseEntity<List<String>> getAllStationData() {
-        
+
         return ResponseEntity.ok(stationDataList);
     }
 }

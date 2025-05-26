@@ -17,10 +17,10 @@ public class StationConsumer {
     public static void main(String[] args) {
 
         Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "zzz");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
 
@@ -38,29 +38,29 @@ public class StationConsumer {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(1));
 
 
-                for (ConsumerRecord<String, String> record : records) {
+            for (ConsumerRecord<String, String> record : records) {
 
 
-                    try {
+                try {
 
-                        String decryptedJson = decryptAndUnwrap(record.value());
-                        JsonObject payload = JsonParser.parseString(decryptedJson).getAsJsonObject();
+                    String decryptedJson = decryptAndUnwrap(record.value());
+                    JsonObject payload = JsonParser.parseString(decryptedJson).getAsJsonObject();
 
-                        if (isValidStationMessage(payload)) {
+                    if (isValidStationMessage(payload)) {
 
-                            postToCentralStation(decryptedJson);
-                        } else {
-                            System.err.println("Invalid message structure, skipping: " + decryptedJson);
-                        }
-
-                    } catch (Exception e) {
-                        System.err.println("Error processing message: " + e.getMessage());
-                        e.printStackTrace();
+                        postToCentralStation(decryptedJson);
+                    } else {
+                        System.err.println("Invalid message structure, skipping: " + decryptedJson);
                     }
-                }
 
+                } catch (Exception e) {
+                    System.err.println("Error processing message: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
+
         }
+    }
 
 
     private static String decryptAndUnwrap(String wrappedJson) throws Exception {

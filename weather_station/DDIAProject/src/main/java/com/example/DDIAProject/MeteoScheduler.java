@@ -3,35 +3,66 @@ package com.example.DDIAProject;
 import com.google.gson.*;
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.*;
-import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.http.*;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.*;
 
-@Component
-@EnableScheduling
 public class MeteoScheduler {
 
     private static final Gson gson = new Gson();
     private static final HttpClient httpClient = HttpClient.newHttpClient();
-    private final KafkaProducer<String, String> producer;
-    private final Random rand = new Random();
+    private static KafkaProducer<String, String> producer;
+    private static final Random rand = new Random();
+    private static final ZoneId CAIRO_ZONE = ZoneId.of("Africa/Cairo");
+    private static ScheduledExecutorService scheduler;
 
-    public MeteoScheduler(@Value("${kafka.bootstrap}") String bootstrapServers) {
+    public static void main(String[] args) {
+        // Initialize Kafka producer
         Properties props = new Properties();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092"); // or get from args
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        this.producer = new KafkaProducer<>(props);
+        producer = new KafkaProducer<>(props);
+
+        // Initialize scheduler
+        scheduler = Executors.newScheduledThreadPool(1);
+
+        // Calculate initial delay to run at 2:04 AM Cairo time
+        long initialDelay = calculateInitialDelay();
+
+        // Schedule the task to run daily
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                fetchAndPublish();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, initialDelay, TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
+
+        // Add shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            scheduler.shutdown();
+            producer.close();
+        }));
     }
 
-    @Scheduled(cron = "0 4 2 * * *", zone = "Africa/Cairo")
-    public void fetchAndPublish() throws Exception {
+    private static long calculateInitialDelay() {
+        ZonedDateTime now = ZonedDateTime.now(CAIRO_ZONE);
+        ZonedDateTime nextRun = now.withHour(9).withMinute(53).withSecond(0);
+
+        if (now.compareTo(nextRun) > 0) {
+            nextRun = nextRun.plusDays(1);
+        }
+
+        return Duration.between(now, nextRun).getSeconds();
+    }
+
+    public static void fetchAndPublish() throws Exception {
+        System.out.println("Executing scheduled weather data fetch at " + ZonedDateTime.now(CAIRO_ZONE));
 
         String url = "https://api.open-meteo.com/v1/forecast"
                 + "?latitude=31.200092&longitude=29.918739"
@@ -48,7 +79,6 @@ public class MeteoScheduler {
         JsonArray temps = hourly.getAsJsonArray("temperature_2m");
         JsonArray hums = hourly.getAsJsonArray("relative_humidity_2m");
         JsonArray winds = hourly.getAsJsonArray("wind_speed_10m");
-
 
         List<JsonObject> allMessages = new ArrayList<>(24);
         for (int i = 0; i < 24; i++) {
@@ -133,7 +163,7 @@ public class MeteoScheduler {
         producer.flush();
     }
 
-    private String wrapAndEncryptMessage(JsonObject fullMessage) throws Exception {
+    private static String wrapAndEncryptMessage(JsonObject fullMessage) throws Exception {
         JsonElement stationId = fullMessage.get("station_id");
         JsonElement serialNo = fullMessage.get("s_no");
         JsonElement humidity = fullMessage.getAsJsonObject("weather").get("humidity");
@@ -153,6 +183,7 @@ public class MeteoScheduler {
 
         return gson.toJson(wrapper);
     }
+
     private static class MessageWrapper {
         JsonObject message;
         String type;
