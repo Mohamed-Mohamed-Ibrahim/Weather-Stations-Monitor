@@ -4,14 +4,13 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 import WeatherStationsMonitoring.BaseCentralStation.DatabaseWriter.RecordIdentifier ;
 import WeatherStationsMonitoring.BaseCentralStation.Message.WeatherStatusMessage ;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DatabaseReader {
-    private String readRecord(int file_id, long offset, int valueSize) throws IOException{
+    private String readRecord(int file_id, int offset, int valueSize) throws IOException{
 
         String fileName = DatabaseWriter.getDatabaseDirectory()+ "Segment_"+ file_id+ ".data";
         RandomAccessFile file = new RandomAccessFile(fileName, "r") ;
