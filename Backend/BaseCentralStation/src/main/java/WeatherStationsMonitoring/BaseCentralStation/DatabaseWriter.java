@@ -72,10 +72,10 @@ public class DatabaseWriter {
     private static final String DATABASE_DIRECTORY = "BitCask Riak Database/";
     // concurrent hashmap for concurrent access to the same key
     private static final ConcurrentHashMap<Long, RecordIdentifier> keyDirectory = new ConcurrentHashMap<>() ;
-    private static final int BATCH_SIZE_FOR_PARQUET = 1 ;
+    private static final int BATCH_SIZE_FOR_PARQUET = 10000 ;
 
     // multiple from parquet batch to avoid dividing batch on two files ~ 100 MB with average 55 byte / record
-    private static final int RECORDS_PER_SEGMENT = 2 * BATCH_SIZE_FOR_PARQUET ;
+    private static final int RECORDS_PER_SEGMENT = 200 * BATCH_SIZE_FOR_PARQUET ;
     // Count of files compacted each time
     private static final int COMPACTION_PERIOD = 3 ;
     private static int activeFileRecords = 0 ;

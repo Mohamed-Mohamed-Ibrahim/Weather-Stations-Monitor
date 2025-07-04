@@ -95,7 +95,7 @@ public class StationConsumer {
     private static void postToCentralStation(String stationJson) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
 //                .uri(new URI("http://localhost:8080/weatherMonitoring/BaseCentralStation"))
-                .uri(new URI("http://192.168.49.2:30080/weatherMonitoring/BaseCentralStation"))
+                    .uri(new URI("http://192.168.49.2:30080/weatherMonitoring/BaseCentralStation"))
                 .timeout(Duration.ofSeconds(5))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(stationJson))

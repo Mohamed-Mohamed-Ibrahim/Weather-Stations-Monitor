@@ -92,6 +92,8 @@
 			<artifactId>hadoop-mapreduce-client-core</artifactId>
 			<version>3.3.6</version>
 		</dependency>
+
+
 	</dependencies>
 
 	<build>
