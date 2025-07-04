@@ -12,18 +12,18 @@ import java.util.concurrent.TimeUnit;
 public class WeatherStationMock {
 
     public static void main(String[] args) {
-        HttpClient client = HttpClient.newHttpClient();
-        Random rand = new Random();
-        String endpoint = "http://localhost:8080/weatherMonitoring/BaseCentralStation";
+//        HttpClient client = HttpClient.newHttpClient();
+//        Random rand = new Random();
+//        String endpoint = "http://localhost:8080/weatherMonitoring/BaseCentralStation";
 //        String endpoint = "http://192.168.49.2:30080/weatherMonitoring/BaseCentralStation";
 
         // Hint Branch
 
-        // final int TOTAL_MESSAGES = 15000; // per station
-        // final int STATIONS = 2;
-        // final String endpoint = "http://localhost:8080/weatherMonitoring/BaseCentralStation";
-        // final HttpClient client = HttpClient.newHttpClient();
-        // final Random rand = new Random();
+         final int TOTAL_MESSAGES = 15000; // per station
+         final int STATIONS = 2;
+         final String endpoint = "http://localhost:8080/weatherMonitoring/BaseCentralStation";
+         final HttpClient client = HttpClient.newHttpClient();
+         final Random rand = new Random();
 
         // Create an executor with as many threads as stations
         ExecutorService executor = Executors.newFixedThreadPool(STATIONS);
