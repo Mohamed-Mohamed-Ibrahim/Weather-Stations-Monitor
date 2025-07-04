@@ -1,5 +1,6 @@
 package WeatherStationsMonitoring.BaseCentralStation;
 import org.springframework.beans.factory.annotation.Autowired;
+import WeatherStationsMonitoring.BaseCentralStation.ParquetConversion.DatabaseReaderParquet;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
@@ -42,6 +43,14 @@ public class BaseCentralStationController {
             return ResponseEntity.ok(databaseReader.viewAll());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/parquet")
+    public void dumpAllToParquet() {
+        try {
+            DatabaseReaderParquet.dumpAllToParquet();
+        } catch (Exception e) {
         }
     }
 }

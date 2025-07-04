@@ -1,22 +1,85 @@
+---
+# Persistent Volume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: shared-data-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce  # Allow multiple pods to read/write
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: shared-storage
+  hostPath:  # For development - use appropriate storage class in production
+    path: /data # on minikube VM
+    type: DirectoryOrCreate
+
+---
+# Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: shared-storage
+
+---
+# BaseCentralStation Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: data_acquisition
+  name: base-central-station
+  labels:
+    app: base-central-station
 spec:
+  replicas: 1
   selector:
     matchLabels:
-      app: data_acquisition
+      app: base-central-station
   template:
     metadata:
       labels:
-        app: data_acquisition
+        app: base-central-station
     spec:
       containers:
-      - name: data_acquisition
-        image: <Image>
+      - name: base-central-station
+        image: base-central-station:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: shared-data
+          mountPath: /app/data # in /var/lib/docker/overlay2/xxx
         resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
           limits:
-            memory: "128Mi"
+            memory: "512Mi"
             cpu: "500m"
-        ports:
-        - containerPort: <Port>
+      volumes:
+      - name: shared-data
+        persistentVolumeClaim:
+          claimName: shared-data-pvc
+---
+# Optional: Service for BaseCentralStation (if it needs to be accessed)
+apiVersion: v1
+kind: Service
+metadata:
+  name: base-central-station-service
+spec:
+  selector:
+    app: base-central-station
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30080 # can work with ClusterIP => port outside cluster
+  # type: ClusterIP # => accessiable only inside cluster
+  type: NodePort  # => accessiable outside cluster
+
+---

@@ -1,23 +1,45 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: data_processing_archiving
+  name: weather-station
+  labels:
+    app: weather-station
 spec:
+  replicas: 1
   selector:
     matchLabels:
-      app: data_processing_archiving
+      app: weather-station
   template:
     metadata:
       labels:
-        app: data_processing_archiving
+        app: weather-station
     spec:
-      replicas: 10
       containers:
-      - name: data_processing_archiving
-        image: <Image>
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
-        ports:
-        - containerPort: <Port>
+      - name: weather-station
+        image: weather_station:latest
+        imagePullPolicy: IfNotPresent
+        command: ["java", "-jar", "/app/weather_station.jar"]
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer
+  labels:
+    app: consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      containers:
+      - name: consumer
+        image: consumer:latest
+        imagePullPolicy: IfNotPresent
+        command: ["java", "-jar", "/app/consumer.jar"]
