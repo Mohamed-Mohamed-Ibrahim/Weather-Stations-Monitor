@@ -157,11 +157,14 @@ public class DatabaseWriter {
             if((activeFileOrder+1) % (COMPACTION_PERIOD+1) == 0){
                 databaseCompactor.compactFiles(activeFileOrder-COMPACTION_PERIOD,activeFileOrder);
                 activeFileOrder ++ ;
+                databaseReaderParquet = new DatabaseReaderParquet(DATABASE_DIRECTORY+ "Segment_"+ activeFileOrder +".data", activeFileOrder);
+                databaseReaderParquet.start();
             }
+
+
             activeFileOrder++;
             activeFileOffset = 0;
             activeFileRecords = 0 ;
-            System.out.println(activeFileRecords);
             activeFile = new RandomAccessFile(DATABASE_DIRECTORY+ "Segment_"+ activeFileOrder +".data", "rw");
             databaseReaderParquet = new DatabaseReaderParquet(DATABASE_DIRECTORY+ "Segment_"+ activeFileOrder +".data", activeFileOrder);
         }
