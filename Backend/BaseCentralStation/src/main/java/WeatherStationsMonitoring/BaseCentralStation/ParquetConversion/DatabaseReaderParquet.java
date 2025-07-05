@@ -28,7 +28,10 @@ import java.util.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
-public class DatabaseReaderParquet {
+public class DatabaseReaderParquet implements Runnable {
+
+    private Thread t;
+
     private static String readRecord(int file_id, long offset) throws IOException{
 
         String fileName = DatabaseWriter.getDatabaseDirectory()+ "Segment_"+ file_id+ ".data";
@@ -82,7 +85,7 @@ public class DatabaseReaderParquet {
         return allData ;
     }
 
-    private static final String OUTPUT_DIR = "data/Parquet";
+    private static final String OUTPUT_DIR = "Parquet";
 
     public static void dumpAllToParquet() throws IOException {
         File dir = new File(DatabaseWriter.getDatabaseDirectory());
@@ -166,4 +169,21 @@ public class DatabaseReaderParquet {
     }
 
 
+    @Override
+    public void run() {
+        System.out.println("Parquet Conversion has begun");
+        try {
+            dumpAllToParquet();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Parquet Conversion has ended");
     }
+
+    public void start() {
+        if (t == null) {
+            t = new Thread(this);
+            t.start();
+        }
+    }
+}

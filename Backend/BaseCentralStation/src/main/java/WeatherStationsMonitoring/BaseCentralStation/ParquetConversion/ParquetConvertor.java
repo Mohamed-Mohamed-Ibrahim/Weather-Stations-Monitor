@@ -9,7 +9,14 @@ public class ParquetConvertor {
 
     public static void main(String[] args) throws IOException {
         System.out.println();;
-        DatabaseReaderParquet.dumpAllToParquet();
+        DatabaseReaderParquet databaseReaderParquet = new DatabaseReaderParquet();
+        databaseReaderParquet.start();
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println(123123);
         return;
     }
 }
