@@ -66,16 +66,15 @@ public class DatabaseWriter {
     }
 
     //  Parquet
-    @Autowired
     DatabaseReaderParquet databaseReaderParquet;
     //
     private static final String DATABASE_DIRECTORY = "BitCask Riak Database/";
     // concurrent hashmap for concurrent access to the same key
     private static final ConcurrentHashMap<Long, RecordIdentifier> keyDirectory = new ConcurrentHashMap<>() ;
-    private static final int BATCH_SIZE_FOR_PARQUET = 1 ;
+    private static final int BATCH_SIZE_FOR_PARQUET = 1_000 ;
 
     // multiple from parquet batch to avoid dividing batch on two files ~ 100 MB with average 55 byte / record
-    private static final int RECORDS_PER_SEGMENT = 2 * BATCH_SIZE_FOR_PARQUET ;
+    private static final int RECORDS_PER_SEGMENT = 1 * BATCH_SIZE_FOR_PARQUET ;
     // Count of files compacted each time
     private static final int COMPACTION_PERIOD = 3 ;
     private static int activeFileRecords = 0 ;
@@ -132,6 +131,7 @@ public class DatabaseWriter {
             Files.createDirectories(Path.of(DATABASE_DIRECTORY));
             activeFile = new RandomAccessFile(DATABASE_DIRECTORY+ "Segment_"+ activeFileOrder +".data", "rw");
             activeFile.seek(activeFileOffset);
+            databaseReaderParquet = new DatabaseReaderParquet(DATABASE_DIRECTORY+ "Segment_"+ activeFileOrder +".data", activeFileOrder);
         }
 
         // Append to current file
@@ -150,7 +150,7 @@ public class DatabaseWriter {
 
         if(activeFileRecords == RECORDS_PER_SEGMENT){
             //  Parquet Start
-            databaseReaderParquet.start(DATABASE_DIRECTORY+ "Segment_"+ activeFileOrder +".data", activeFileOrder);
+            databaseReaderParquet.start();
             //  Parquet End
 
             activeFile.close();
@@ -161,8 +161,9 @@ public class DatabaseWriter {
             activeFileOrder++;
             activeFileOffset = 0;
             activeFileRecords = 0 ;
+            System.out.println(activeFileRecords);
             activeFile = new RandomAccessFile(DATABASE_DIRECTORY+ "Segment_"+ activeFileOrder +".data", "rw");
-            databaseReaderParquet = new DatabaseReaderParquet();
+            databaseReaderParquet = new DatabaseReaderParquet(DATABASE_DIRECTORY+ "Segment_"+ activeFileOrder +".data", activeFileOrder);
         }
 
     }

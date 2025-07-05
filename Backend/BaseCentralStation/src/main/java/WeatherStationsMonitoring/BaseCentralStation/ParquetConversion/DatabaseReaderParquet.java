@@ -33,7 +33,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.springframework.stereotype.Service;
 
-@Service
+//@Service
 public class DatabaseReaderParquet implements Runnable {
 
     private Thread t;
@@ -44,6 +44,16 @@ public class DatabaseReaderParquet implements Runnable {
         if (!outputDir.exists()) {
             outputDir.mkdir();
         }
+
+    }
+
+    public DatabaseReaderParquet(String activeFilPath, Integer activeFileOrder) {
+        try {
+            this.activeFile = new RandomAccessFile(activeFilPath, "rw");
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        this.activeFileOrder = activeFileOrder;
     }
 
     private static String readRecord(int file_id, long offset) throws IOException{
@@ -245,7 +255,7 @@ public class DatabaseReaderParquet implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("Parquet Conversion has begun");
+        System.out.println("Parquet Conversion "+ activeFileOrder +" has begun");
         try {
 //            dumpAllToParquet();
             parquetConversion();
@@ -254,12 +264,10 @@ public class DatabaseReaderParquet implements Runnable {
 
             throw new RuntimeException(e);
         }
-        System.out.println("Parquet Conversion has ended");
+        System.out.println("Parquet Conversion "+ activeFileOrder +" has ended");
     }
 
-    public void start(String activeFilePath, Integer activeFileOrder) throws FileNotFoundException {
-        this.activeFile = new RandomAccessFile(activeFilePath, "rw");
-        this.activeFileOrder = activeFileOrder;
+    public void start() throws FileNotFoundException {
         if (t == null) {
             t = new Thread(this);
             t.start();
