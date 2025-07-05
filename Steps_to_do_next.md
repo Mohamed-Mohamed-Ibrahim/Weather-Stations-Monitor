@@ -1,4 +1,4 @@
-1. Threads for parquet conversion 
+1. Threads for parquet conversion - done
 2. kafka running on docker
 3. make multithreading in kafka part 
 4. kafka running on k8s
