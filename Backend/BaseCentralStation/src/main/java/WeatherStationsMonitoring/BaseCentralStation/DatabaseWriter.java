@@ -22,8 +22,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Service
 public class DatabaseWriter {
@@ -70,7 +68,6 @@ public class DatabaseWriter {
     //  Parquet
     @Autowired
     DatabaseReaderParquet databaseReaderParquet;
-    ExecutorService executor;
     //
     private static final String DATABASE_DIRECTORY = "BitCask Riak Database/";
     // concurrent hashmap for concurrent access to the same key
@@ -106,8 +103,6 @@ public class DatabaseWriter {
     public void init() {
         try {
             Files.createDirectories(Path.of(DATABASE_DIRECTORY));
-            //  Parquet
-            executor = Executors.newFixedThreadPool(2);
         } catch (IOException e) {
             throw new RuntimeException("Failed to initialize BitCask file", e);
         }
