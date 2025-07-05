@@ -17,10 +17,11 @@ public class StationConsumer {
     public static void main(String[] args) {
 
         Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092");
+//        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092");
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "zzz");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
 
@@ -45,10 +46,10 @@ public class StationConsumer {
 
                         String decryptedJson = decryptAndUnwrap(record.value());
                         JsonObject payload = JsonParser.parseString(decryptedJson).getAsJsonObject();
-
+                        System.out.println(payload);
                         if (isValidStationMessage(payload)) {
 
-                            postToCentralStation(decryptedJson);
+//                            postToCentralStation(decryptedJson);
                         } else {
                             System.err.println("Invalid message structure, skipping: " + decryptedJson);
                         }
