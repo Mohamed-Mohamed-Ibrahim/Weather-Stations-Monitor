@@ -1,4 +1,5 @@
 package WeatherStationsMonitoring.BaseCentralStation;
+import WeatherStationsMonitoring.BaseCentralStation.ParquetConversion.DatabaseReaderParquet;
 import WeatherStationsMonitoring.BaseCentralStation.ParquetConversion.WeatherStatusInfo;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -21,6 +22,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class DatabaseWriter {
@@ -65,9 +68,9 @@ public class DatabaseWriter {
     }
 
     //  Parquet
-    private static final String Parquet_DIRECTORY = "Parquet/";
-    MessageType schema = getSchema();
-    File outputDir;
+    @Autowired
+    DatabaseReaderParquet databaseReaderParquet;
+    ExecutorService executor;
     //
     private static final String DATABASE_DIRECTORY = "BitCask Riak Database/";
     // concurrent hashmap for concurrent access to the same key
@@ -103,10 +106,8 @@ public class DatabaseWriter {
     public void init() {
         try {
             Files.createDirectories(Path.of(DATABASE_DIRECTORY));
-            outputDir = new File(Parquet_DIRECTORY);
-            if (!outputDir.exists()) {
-                outputDir.mkdir();
-            }
+            //  Parquet
+            executor = Executors.newFixedThreadPool(2);
         } catch (IOException e) {
             throw new RuntimeException("Failed to initialize BitCask file", e);
         }
@@ -153,55 +154,9 @@ public class DatabaseWriter {
 
 
         if(activeFileRecords == RECORDS_PER_SEGMENT){
-            //  Parquet
-            activeFile.seek(0);
-            List<WeatherStatusInfo> partitionedByStation = new ArrayList<>();
-            while (activeFile.getFilePointer() < activeFile.length()) {
-                long ts = activeFile.readLong();             // 8 bytes
-                int keySize = activeFile.readUnsignedShort();       // 2 bytes
-                int valueSize = activeFile.readInt();               // 4 bytes
-
-                if (keySize != 8) {
-                    activeFile.skipBytes(keySize + valueSize);
-                    continue;
-                }
-
-                long key = activeFile.readLong();                   // 8-byte station_id
-                byte[] value = new byte[valueSize];
-                activeFile.readFully(value);
-
-                Message.WeatherStatusMessage ws = Message.WeatherStatusMessage.parseFrom(value);
-
-                WeatherStatusInfo info = new WeatherStatusInfo(
-                        ws.getStationId(),
-                        ws.getSNo(),
-                        ws.getBatteryStatus().toString().toLowerCase(),
-                        ws.getStatusTimestamp()
-                );
-
-                partitionedByStation.add(info);
-            }
-
-            org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(Paths.get(Parquet_DIRECTORY, activeFileOrder+".parquet").toString());
-
-            // Write each station's data to a separate Parquet file
-            try (ParquetWriter<Group> writer = ExampleParquetWriter.builder(path)
-                    .withType(schema)
-                    .withConf(new Configuration())
-                    .build()) {
-                SimpleGroupFactory groupFactory = new SimpleGroupFactory(getSchema());
-                for  (WeatherStatusInfo info : partitionedByStation) {
-
-
-
-                    Group group = groupFactory.newGroup()
-                            .append("station_id", info.getStation_id())
-                            .append("s_no", info.getS_no())
-                            .append("battery_status", info.getBattery_status())
-                            .append("status_timestamp", info.getStatus_timestamp());
-                    writer.write(group);
-                }
-            }
+            //  Parquet Start
+            databaseReaderParquet.start(DATABASE_DIRECTORY+ "Segment_"+ activeFileOrder +".data", activeFileOrder);
+            //  Parquet End
 
             activeFile.close();
             if((activeFileOrder+1) % (COMPACTION_PERIOD+1) == 0){
@@ -212,6 +167,7 @@ public class DatabaseWriter {
             activeFileOffset = 0;
             activeFileRecords = 0 ;
             activeFile = new RandomAccessFile(DATABASE_DIRECTORY+ "Segment_"+ activeFileOrder +".data", "rw");
+            databaseReaderParquet = new DatabaseReaderParquet();
         }
 
     }

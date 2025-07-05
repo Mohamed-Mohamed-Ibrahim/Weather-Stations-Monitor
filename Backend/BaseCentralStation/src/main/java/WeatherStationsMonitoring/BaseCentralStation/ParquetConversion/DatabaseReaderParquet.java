@@ -3,16 +3,20 @@ package WeatherStationsMonitoring.BaseCentralStation.ParquetConversion;
 import WeatherStationsMonitoring.BaseCentralStation.DatabaseWriter;
 import WeatherStationsMonitoring.BaseCentralStation.DatabaseWriter.RecordIdentifier;
 import WeatherStationsMonitoring.BaseCentralStation.KeyValueResponse;
+import WeatherStationsMonitoring.BaseCentralStation.Message;
 import WeatherStationsMonitoring.BaseCentralStation.Message.WeatherStatusMessage;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 
+import jakarta.annotation.PostConstruct;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.hadoop.ParquetFileWriter;
@@ -27,10 +31,20 @@ import java.util.*;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.springframework.stereotype.Service;
 
+@Service
 public class DatabaseReaderParquet implements Runnable {
 
     private Thread t;
+
+    @PostConstruct
+    public void init() {
+        outputDir = new File(Parquet_DIRECTORY);
+        if (!outputDir.exists()) {
+            outputDir.mkdir();
+        }
+    }
 
     private static String readRecord(int file_id, long offset) throws IOException{
 
@@ -168,19 +182,84 @@ public class DatabaseReaderParquet implements Runnable {
                 );
     }
 
+    private RandomAccessFile activeFile;
+    private Integer activeFileOrder;
+    private static final String Parquet_DIRECTORY = "Parquet/";
+    MessageType schema = getSchema();
+    File outputDir;
+
+    private void parquetConversion() throws IOException {
+
+        activeFile.seek(0);
+        List<WeatherStatusInfo> partitionedByStation = new ArrayList<>();
+        while (activeFile.getFilePointer() < activeFile.length()) {
+            long ts = activeFile.readLong();             // 8 bytes
+            int keySize = activeFile.readUnsignedShort();       // 2 bytes
+            int valueSize = activeFile.readInt();               // 4 bytes
+
+            if (keySize != 8) {
+                activeFile.skipBytes(keySize + valueSize);
+                continue;
+            }
+
+            long key = activeFile.readLong();                   // 8-byte station_id
+            byte[] value = new byte[valueSize];
+            activeFile.readFully(value);
+
+            Message.WeatherStatusMessage ws = Message.WeatherStatusMessage.parseFrom(value);
+
+            WeatherStatusInfo info = new WeatherStatusInfo(
+                    ws.getStationId(),
+                    ws.getSNo(),
+                    ws.getBatteryStatus().toString().toLowerCase(),
+                    ws.getStatusTimestamp()
+            );
+
+            partitionedByStation.add(info);
+        }
+
+        org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(Paths.get(Parquet_DIRECTORY, activeFileOrder+".parquet").toString());
+
+        // Write each station's data to a separate Parquet file
+        try (ParquetWriter<Group> writer = ExampleParquetWriter.builder(path)
+                .withType(schema)
+                .withConf(new Configuration())
+                .build()) {
+            SimpleGroupFactory groupFactory = new SimpleGroupFactory(getSchema());
+            for  (WeatherStatusInfo info : partitionedByStation) {
+
+
+
+                Group group = groupFactory.newGroup()
+                        .append("station_id", info.getStation_id())
+                        .append("s_no", info.getS_no())
+                        .append("battery_status", info.getBattery_status())
+                        .append("status_timestamp", info.getStatus_timestamp());
+                writer.write(group);
+            }
+        }
+
+        this.activeFile.close();
+
+    }
 
     @Override
     public void run() {
         System.out.println("Parquet Conversion has begun");
         try {
-            dumpAllToParquet();
+//            dumpAllToParquet();
+            parquetConversion();
+
         } catch (IOException e) {
+
             throw new RuntimeException(e);
         }
         System.out.println("Parquet Conversion has ended");
     }
 
-    public void start() {
+    public void start(String activeFilePath, Integer activeFileOrder) throws FileNotFoundException {
+        this.activeFile = new RandomAccessFile(activeFilePath, "rw");
+        this.activeFileOrder = activeFileOrder;
         if (t == null) {
             t = new Thread(this);
             t.start();
