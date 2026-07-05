@@ -30,7 +30,8 @@ public class MeteoScheduler {
         this.producer = new KafkaProducer<>(props);
     }
 
-    @Scheduled(cron = "0 4 2 * * *", zone = "Africa/Cairo")
+     @Scheduled(cron = "0 4 2 * * *", zone = "Africa/Cairo")
+     //@Scheduled(fixedRate = 15000) // Runs every 15 seconds for testing
     public void fetchAndPublish() throws Exception {
 
         String url = "https://api.open-meteo.com/v1/forecast"
