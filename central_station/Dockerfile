@@ -1,4 +1,3 @@
-FROM anapsix/alpine-java
-
-COPY central_station.jar /home/central_station.jar
-CMD ["java","-jar","/home/central_station.jar"]
+FROM eclipse-temurin:21-jre-alpine
+COPY target/*.jar /app/app.jar
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

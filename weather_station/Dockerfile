@@ -1,4 +1,3 @@
-FROM anapsix/alpine-java
-
-COPY weather_station.jar /home/weather_station.jar
-CMD ["java","-jar","/home/weather_station.jar"]
+FROM eclipse-temurin:21-jre-alpine
+COPY target/*.jar /app/app.jar
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
